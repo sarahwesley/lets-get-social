@@ -4,18 +4,17 @@ const userController = {
     // get all the users
     getAllUsers(req, res) {
         User.find({})
-            .populate(
-                { 
+            .populate({ 
                     path : 'thoughts', 
-                    select: '-__v'
+                    select: ('-__v')
                 })
             .populate(
                 {
                     path: 'friends',
-                    select: '-__v'
+                    select: ('-__v')
                 })
             .select('-__v')
-            .sort({ _id: -1 })
+            // .sort({ _id: -1 })
             .then(dbUserData => res.json(dbUserData))
             .catch(err => {
                 console.log(err);
@@ -26,10 +25,10 @@ const userController = {
     // get a user by id
     getUserById({ params }, res) {
         User.findOne({_id: params.id})
-            .populate({
-                path: 'thoughts',
-                select: '-__v'
-            })
+            // .populate({
+            //     path: 'thoughts',
+            //     select: '-__v'
+            // })
             .select('-__v')
             .then(dbUserData => res.json(dbUserData))
             .catch(err => {
@@ -107,6 +106,7 @@ const userController = {
             {_id: params.userId},
             {$push: {friends: params.friendId}},
             {new: true})
+            .select('-__v')
             .then(dbUserData => {
                 if(!dbUserData) {
                     res.status(404).json({
@@ -123,19 +123,14 @@ const userController = {
     },
 
     // delete a friend
-    removefromFriendList({ params }, res) {
-        User.findOneAndDelete({_id: params.userId})
-            .then(deletedFriend => {
-                if (!deletedFriend) {
-                    return res.status(404).json({
-                        message: 'no friends found'
-                    })
-                }
-                return User.findOneAndUpdate(
-                    {friends: params.friendId},
-                    {$pull: {friends: params.friendId}},
-                    {new: true})
-            })
+    removeFriend({ params }, res) {
+        User.findByIdAndUpdate(
+            {_id: params.userId},
+            {friends: params.friendId},
+            {$pull: {friends: params.friendId}},
+            {new: true})
+            
+            .select('-__v')
             .then(dbUserData => {
                 if (!dbUserData) {
                     res.status(404).json({
